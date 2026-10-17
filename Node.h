@@ -6,16 +6,17 @@
 template <typename T>
 class Node {
 	public:
-		Node(T data, Node <T>* next=nullptr){
-			this->data=data;
-			this->next=next;
-		}
-		friend std:: ostream& operator <<(std::ostream &out, const Node<T> &node){
+		T data;
+		Node<T>* next;
+		Node(T data, Node<T>* next=nullptr):data(data) ,next(next) {}
+		friend std::ostream& operator <<(std::ostream &out, const Node<T> &node){
 			out << node.data;
 			return out;
 		}
-		T data;
-		Node <T>* next;
-};
+
+
+
+		};
+
 
 #endif

@@ -1,96 +1,37 @@
-#ifndef LIST_LINKED_H
-#define LIST_LINKED_H
+#ifndef LISTLINKED_H
+#define LISTLINKED_H
 
 #include <ostream>
 #include <stdexcept>
-#include "List.h"
+#include "List.h" 
 #include "Node.h"
 
 template <typename T>
 class ListLinked : public List<T> {
 private:
-    Node<T>* first; // Puntero al primer nodo de la lista
-    int n;          // Número de elementos en la lista
+    Node<T>* first;
+    int n;
 
 public:
-    // --- Constructor y Destructor ---
-
+    // Constructor
     ListLinked() {
         first = nullptr;
         n = 0;
     }
 
-    ~ListLinked() override {
-        // Implementación siguiendo exactamente tu guía (Actividad 7)
+    // Destructor
+    ~ListLinked() {
         while (first != nullptr) {
-            Node<T>* aux = first->next; // 1. Situar puntero aux al siguiente nodo
-            delete first;               // 2. Liberar memoria del nodo first
-            first = aux;                // 3. Actualizar first a aux
+            Node<T>* aux = first->next;
+            delete first;
+            first = aux;
         }
-        // 4. Repetir hasta que no queden nodos
     }
 
-    // --- Métodos heredados de la interfaz List<T> ---
-
-    void insert(int pos, T e) override {
-        if (pos < 0 || pos > n) {
-            throw std::out_of_range("Posición no válida");
-        }
-        
-        if (pos == 0) {
-            // Insertar al principio
-            first = new Node<T>(e, first);
-        } else {
-            // Avanzar hasta el nodo anterior a la posición de inserción
-            Node<T>* prev = first;
-            for (int i = 0; i < pos - 1; i++) {
-                prev = prev->next;
-            }
-            // Crear nuevo nodo apuntando al siguiente de prev, y prev apunta al nuevo
-            prev->next = new Node<T>(e, prev->next);
-        }
-        n++;
-    }
-
-    void append(T e) override {
-        insert(n, e); // Reutilizamos insert para añadir al final
-    }
-
-    void prepend(T e) override {
-        insert(0, e); // Reutilizamos insert para añadir al principio
-    }
-
-    T remove(int pos) override {
-        if (pos < 0 || pos > n - 1) {
-            throw std::out_of_range("Posición no válida");
-        }
-
-        Node<T>* aux = first;
-        T data;
-
-        if (pos == 0) {
-            // Borrar el primer elemento
-            first = first->next;
-            data = aux->data;
-            delete aux;
-        } else {
-            // Avanzar hasta el nodo anterior al que queremos borrar
-            Node<T>* prev = first;
-            for (int i = 0; i < pos - 1; i++) {
-                prev = prev->next;
-            }
-            aux = prev->next;         // Nodo a borrar
-            prev->next = aux->next;   // Desenlazarlo
-            data = aux->data;
-            delete aux;               // Liberar memoria
-        }
-        n--;
-        return data;
-    }
-
-    T get(int pos) override {
-        if (pos < 0 || pos > n - 1) {
-            throw std::out_of_range("Posición no válida");
+    // Operador []
+    T operator[](int pos) { //va hasta size()-1 porque en la posicion size() no hay nada. Si size= 4, las posiciones son 0 1 2 3, en la 4 hay basura 
+    	    if (pos < 0 || pos >= size()) {
+            throw std::out_of_range("Posicion fuera de rango");
         }
         Node<T>* aux = first;
         for (int i = 0; i < pos; i++) {
@@ -99,45 +40,95 @@ public:
         return aux->data;
     }
 
+    // Operador << (Amigo)
+    friend std::ostream& operator<<(std::ostream &out, const ListLinked<T> &list) {
+        Node<T>* aux = list.first;
+        int i = 0;
+        while (aux != nullptr) {
+            out << "Nodo " << i << " :" << aux->data << std::endl;
+            aux = aux->next;
+            i++;
+        }
+        return out;
+    }
+
+    // Método insert
+    void insert(int pos, T e) override {
+        if (pos < 0 || pos > size()) { //va hasta size() porque puedes insertar en la última posición
+            throw std::out_of_range("Posicion fuera de rango");
+        }
+        Node<T>* aux = first;
+        if (pos == 0) {
+            first = new Node<T>(e, aux);
+            n++;
+            return;
+        }
+        Node<T>* prev = nullptr;
+        for (int i = 0; i < pos; i++) {
+            prev = aux;
+            aux = aux->next;
+        }
+        prev->next = new Node<T>(e, aux);
+        n++;
+    }
+
+    // Método remove
+    T remove(int pos) override {
+        if (pos < 0 || pos > size() - 1) {
+            throw std::out_of_range("Posicion fuera de rango");
+        }
+        Node<T>* aux = first;
+        T valor;
+        if (pos == 0) {
+            first = aux->next;
+        } else {
+            Node<T>* prev = nullptr;
+            for (int i = 0; i < pos; i++) {
+                prev = aux;
+                aux = aux->next;
+            }
+            prev->next = aux->next;
+        }
+        valor = aux->data;
+        delete aux;
+        n--;
+        return valor;
+    }
+
+    // Método get
+    T get(int pos) override {
+        if (pos < 0 || pos > size() - 1) {
+            throw std::out_of_range("Posicion fuera de rango");
+        }
+        Node<T>* aux = first;
+        for (int i = 0; i < pos; i++) {
+            aux = aux->next;
+        }
+        return aux->data;
+    }
+
+    // Método search
     int search(T e) override {
         Node<T>* aux = first;
-        int pos = 0;
+        int i = 0;
         while (aux != nullptr) {
             if (aux->data == e) {
-                return pos; // Elemento encontrado
+                return i;
             }
             aux = aux->next;
-            pos++;
+            i++;
         }
-        return -1; // Elemento no encontrado
+        return -1;
     }
 
-    bool empty() override {
-        return n == 0;
-    }
-
-    int size() override {
+    // Método size
+    int size() const override {
         return n;
     }
 
-    // --- Métodos específicos de ListLinked<T> ---
-
-    T operator[](int pos) {
-        return get(pos); // Reutilizamos get() que ya lanza la excepción y busca
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, ListLinked<T>& list) {
-        out << "[";
-        Node<T>* aux = list.first;
-        while (aux != nullptr) {
-            out << aux->data;
-            if (aux->next != nullptr) {
-                out << ", ";
-            }
-            aux = aux->next;
-        }
-        out << "]";
-        return out;
+    // Método empty
+    bool empty() const override {
+        return n == 0;
     }
 };
 
